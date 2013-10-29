@@ -1,4 +1,4 @@
-function edges = generateEdges(hub, nEdges, nNeurons)
+  function edges = generateEdges(hub, nEdges, nNeurons)
     startNeuron = (hub-1) * nNeurons;
     
     k = randperm(nNeurons/2*(nNeurons-1),nEdges);
