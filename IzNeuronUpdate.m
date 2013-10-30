@@ -34,10 +34,21 @@ for k=1:1/dt
    layer{i}.v = v+(dt*(0.04*v.^2+5*v+140-u+layer{i}.I));
    layer{i}.u = u+(dt*(layer{i}.a.*(layer{i}.b.*v-u)));
    % Reset neurons that have spiked
-   fired = find(layer{i}.v>=30); % indices of spikes
+   fired = find(layer{i}.v>=-50); % indices of spikes
    if ~isempty(fired)
       layer{i}.firings = [layer{i}.firings ; t+0*fired, fired];
       layer{i}.v(fired) = layer{i}.c(fired);
       layer{i}.u(fired) = layer{i}.u(fired)+layer{i}.d(fired);
    end
+end
+
+if(rand(1) < 0.01)
+neurons = randi([1,layer{i}.rows], 1, 1);
+for n = 1:1
+    layer{i}.firings = [layer{i}.firings ; t, neurons(n)];
+    layer{i}.v(neurons(n)) = layer{i}.c(neurons(n));
+    layer{i}.u(neurons(n)) = layer{i}.u(neurons(n))+layer{i}.d(neurons(n));
+end
+end
+
 end
