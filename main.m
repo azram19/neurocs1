@@ -1,4 +1,4 @@
-[gcm, e2ecm, e2icm, i2icm, i2ecm] = generateModularNetwork(8, 100, 1000, 200, 0.5);
+[gcm, e2ecm, e2icm, i2icm, i2ecm] = generateModularNetwork(8, 100, 1000, 200, 0.2);
 
 layer = {};
 
@@ -18,13 +18,11 @@ layer{1}.columns = M1;
 
 r = rand(N1,M1);
 layer{1}.a = 0.02*ones(N1,M1);
-layer{1}.b = 0.25*ones(N1,M1);
-layer{1}.c = -65*ones(N1,M1);
-layer{1}.d = 8*ones(N1,M1);
-%layer{1}.c = -65+15*r.^2;
-%layer{1}.d = 8-6*r.^2;
+layer{1}.b = 0.2*ones(N1,M1);
+layer{1}.c = -65+15*r.^2;
+layer{1}.d = 8-6*r.^2;
 
-layer{1}.delay{1} = rand(N1)*20;
+layer{1}.delay{1} = round(rand(N1)*20);
 layer{1}.delay{2} = ones(N1, N2);
 
 layer{1}.factor{1} = 17;
@@ -39,12 +37,10 @@ layer{2}.rows = N2;
 layer{2}.columns = M2;
 
 r = rand(N2,M2);
-layer{2}.a = 0.02*ones(N2,M2);
-layer{2}.b = 0.25*ones(N2,M2);
+layer{2}.a = 0.02 + 0.08 * r;
+layer{2}.b = 0.25 - 0.05*r;
 layer{2}.c = -65*ones(N2,M2);
 layer{2}.d = 2*ones(N2,M2);
-%layer{2}.c = -65+15*r.^2;
-%layer{2}.d = 2-6*r.^2;
 
 layer{2}.delay{1} = ones(N2, N1);
 layer{2}.delay{2} = ones(N2, N2);
@@ -53,10 +49,10 @@ layer{2}.factor{1} = 50;
 layer{2}.factor{2} = 1;
 
 
-Dmax = 10; % maximum propagation delay
+Dmax = 100; % maximum propagation delay
 Tmax = 1000; % simulation time
-Ib = 5; % base current
-
+Ib = 0; % base current
+I = 15;
 
 % Initialise layers
 for lr=1:length(layer)
@@ -65,6 +61,10 @@ for lr=1:length(layer)
    layer{lr}.firings = [];
 end
 
+lambda = 0.01;
+
+layer{1}.I = zeros(N1,M1);
+layer{2}.I = zeros(N2,M2);
 
 % SIMULATE
 for t = 1:Tmax
@@ -74,14 +74,12 @@ for t = 1:Tmax
       t
    end
    
-   % Deliver a constant base current to layer 1
-   layer{1}.I = zeros(N1,M1);
+   randomExc = poissrnd(lambda, N1, M1);
+   randomInh = poissrnd(lambda, N2, M2);
    
-   hub = 1;
-   layer{1}.I((hub-1)*100+1:hub*100,1) = ones(100,1);
+   layer{1}.I = randomExc * I;
+   layer{2}.I = randomInh * I;
    
-   layer{2}.I = zeros(N2,M2);
-      
    % Update all the neurons
    for lr=1:length(layer)
       layer = IzNeuronUpdate(layer,lr,t,Dmax);
@@ -174,4 +172,33 @@ ylim([0 N2*M2+1])
 set(gca,'YDir','reverse')
 title('Population 2 firings')
 
+figure(4)
+clf
+
+%exc
+subplot(2,1,1)
+meanFiringsRate = zeros(50, 8);
+%Take each 50s window shifted by 20s
+hubRanges = [100,200,300,400,500,600,700,800];
+for i = 1:50
+   offset = (i-1)*20 + 1;
+   firingsInThisWindow = firings1(offset:offset+50, 2);
+   firingsByHub = hist(firingsInThisWindow, hubRanges);
+   meanFiringsRate(i, :) = firingsByHub/50*20;
+end
+plot(meanFiringsRate,'-')
+xlim([0 1000])
+
+%inh
+subplot(2,1,2)
+meanFiringsRate = zeros(50, 8);
+%Take each 50s window shifted by 20s
+hubRanges = [100,200,300,400,500,600,700,800];
+for i = 1:50
+   offset = (i-1)*20 + 1;
+   firingsInThisWindow = firings2(offset:offset+50, 2);
+   firingsByHub = hist(firingsInThisWindow, hubRanges);
+   meanFiringsRate(i, :) = firingsByHub/50*20;
+end
+plot(meanFiringsRate,'-')
 drawnow
