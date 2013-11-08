@@ -1,17 +1,35 @@
-[gcm, e2ecm, e2icm, i2icm, i2ecm] = generateModularNetwork(8, 100, 1000, 200, 0.2);
+clear all
+close all
+
+nModules = 8; % number of modules
+nExcitNeurons = 100; % number of excitatory neurons of each module
+nExcitEdges = 1000; % number of excitatory-excitatory edges within each module
+nInhibNeurons = 200; % number of inhibitory neurons
+p = 0; % rewiring probability
+
+% generate modular network
+[gcm, e2ecm, e2icm, i2icm, i2ecm] = generateModularNetwork(nModules, nExcitNeurons, nExcitEdges, nInhibNeurons, p);
+figure(1)
+spy(gcm)
+title(['Connectivity matrix for p = ' num2str(p,1)],'FontSize',13);
+% gcm = global connectivity matrix
+% e2ecm = rewired excitatory-excitatory connectivity matrix
+% e2icm = excitatory-inhibitory connectivity matrix
+% i2icm = inhibitory-inhibitory connectivity matrix
+% i2ecm = inhibitory-excitatory connectivity matrix
 
 layer = {};
-
-% Layer 1 (regular spiking)
-layer{1}.S = {};
-layer{1}.S{1} = e2ecm;
-layer{1}.S{2} = i2ecm;
 
 N1 = 800;
 M1 = 1;
 
 N2 = 200;
 M2 = 1;
+
+% Layer 1 (regular spiking)
+layer{1}.S = {};
+layer{1}.S{1} = e2ecm;
+layer{1}.S{2} = i2ecm;
 
 layer{1}.rows = N1;
 layer{1}.columns = M1;
@@ -51,8 +69,7 @@ layer{2}.factor{2} = 1;
 
 Dmax = 100; % maximum propagation delay
 Tmax = 1000; % simulation time
-Ib = 0; % base current
-I = 15;
+I = 15; % base current
 
 % Initialise layers
 for lr=1:length(layer)
@@ -107,47 +124,10 @@ if ~isempty(firings2)
 end
 
 
-% Plot membrane potentials
-
-figure(1)
-clf
-
-subplot(2,1,1)
-plot(1:Tmax,v1)
-title('Population 1 membrane potentials')
-ylabel('Voltage (mV)')
-ylim([-90 40])
-% xlabel('Time (ms)')
-
-subplot(2,1,2)
-plot(1:Tmax,v2)
-% plot(1:Tmax,v2(:,1))
-title('Population 2 membrane potentials')
-ylabel('Voltage (mV)')
-ylim([-90 40])
-xlabel('Time (ms)')
-
-
-% Plot recovery variable
-
-figure(2)
-clf
-
-subplot(2,1,1)
-plot(1:Tmax,u1)
-title('Population 1 recovery variables')
-% xlabel('Time (ms)')
-
-subplot(2,1,2)
-plot(1:Tmax,u2)
-% plot(1:Tmax,u2(:,1))
-title('Population 2 recovery variables')
-xlabel('Time (ms)')
-
 
 % Raster plots of firings
 
-figure(3)
+figure(2)
 clf
 
 subplot(2,1,1)
@@ -156,49 +136,31 @@ if ~isempty(firings1)
 end
 % xlabel('Time (ms)')
 xlim([0 Tmax])
-ylabel('Neuron number')
+ylabel('Neuron number','FontSize',11)
 ylim([0 N1*M1+1])
 set(gca,'YDir','reverse')
-title('Population 1 firings')
+title(['Excitatory neurons firings for p = ' num2str(p,1)],'FontSize',13)
 
 subplot(2,1,2)
 if ~isempty(firings2)
    plot(firings2(:,1),firings2(:,2),'.')
 end
-xlabel('Time (ms)')
+xlabel('Time (ms)','FontSize',11)
 xlim([0 Tmax])
-ylabel('Neuron number')
+ylabel('Neuron number','FontSize',11)
 ylim([0 N2*M2+1])
 set(gca,'YDir','reverse')
-title('Population 2 firings')
+title(['Inhibitory neurons firings for p = ' num2str(p,1)],'FontSize',13);
 
-figure(4)
+% compute and plot mean firing rates
+windowSize = 50;
+shiftSize = 20;
+[time,meanFrRts] = meanFiringRates(firings1, windowSize, shiftSize, nModules, nExcitNeurons, Tmax);
+
+figure(3)
 clf
-
-%exc
-subplot(2,1,1)
-meanFiringsRate = zeros(50, 8);
-%Take each 50s window shifted by 20s
-hubRanges = [100,200,300,400,500,600,700,800];
-for i = 1:50
-   offset = (i-1)*20 + 1;
-   firingsInThisWindow = firings1(offset:offset+50, 2);
-   firingsByHub = hist(firingsInThisWindow, hubRanges);
-   meanFiringsRate(i, :) = firingsByHub/50*20;
-end
-plot(meanFiringsRate,'-')
-xlim([0 1000])
-
-%inh
-subplot(2,1,2)
-meanFiringsRate = zeros(50, 8);
-%Take each 50s window shifted by 20s
-hubRanges = [100,200,300,400,500,600,700,800];
-for i = 1:50
-   offset = (i-1)*20 + 1;
-   firingsInThisWindow = firings2(offset:offset+50, 2);
-   firingsByHub = hist(firingsInThisWindow, hubRanges);
-   meanFiringsRate(i, :) = firingsByHub/50*20;
-end
-plot(meanFiringsRate,'-')
-drawnow
+plot(time,meanFrRts,'-')
+ylabel('Mean Firing Rate','FontSize',11)
+xlabel('Time (ms)','FontSize',11)
+legend('Hub 1','Hub 2','Hub 3', 'Hub 4', 'Hub 5', 'Hub 6', 'Hub 7', 'Hub 8');
+title(['Mean firing rate for excitatory hubs for p = ' num2str(p,1)],'FontSize',13);
