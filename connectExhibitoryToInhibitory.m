@@ -1,6 +1,6 @@
 function connectivityMatrix = connectExhibitoryToInhibitory(hubsGroups, oldConnectivityMatrix)
     connectivityMatrix = oldConnectivityMatrix;
-       
+    
     availableNeurons = [];
     for i = 1:size(oldConnectivityMatrix,1)
       %  disp(oldConnectivityMatrix(i, :));

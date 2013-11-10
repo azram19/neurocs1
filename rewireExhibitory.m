@@ -21,5 +21,7 @@ function connectivityMatrix = rewireExhibitory(nHubs, nNeurons, connectivityMatr
             end
        end
     end
+    figure(1)
+    clf
     spy(connectivityMatrix);
 end

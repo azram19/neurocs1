@@ -1,4 +1,4 @@
-function [time,mFRs] = meanFiringRates(firings,windowSize,shiftSize,nModules,nExcitNeurons,Tmax)
+function [time,mFRs] = meanFiringRates(firings,windowSize,shiftSize,nModules,Tmax)
 
 % computes the mean firing rate of nModules modules over a Tmax run.
 % it does so by downsampling the firing rates to obtain the mean by
@@ -16,7 +16,7 @@ for i = 1:nDataPoints
    indicesOfFiringsInThisWindow = firings(:, 1)>=offset & firings(:,1)<=offset+windowSize;
    firingsInThisWindow=firings(indicesOfFiringsInThisWindow,2);
    firingsByHub = hist(firingsInThisWindow, hubRanges);
-   mFRs(i, :) = firingsByHub/windowSize;
+   mFRs(i, :) = firingsByHub/shiftSize;
    time(i)=offset;
 end
 

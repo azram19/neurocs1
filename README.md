@@ -1,4 +1,2 @@
-neurocs1
-========
-
-Neurodynamics CS1
+exercise2CN
+===========
