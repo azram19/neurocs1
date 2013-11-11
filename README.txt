@@ -8,8 +8,8 @@ Lukasz Koprowski
 Antoine Montavon
 Agata Mosinska
 
-Throughout the code (in global connectivity matrix) neurons 1:800 were
-excitatory, 801:1000 inhibitory.
+Throughout the code (in global connectivity matrix) neurons 1:800 are
+excitatory, 801:1000 are inhibitory.
 
 
 We used provided scripts to calculate Small World Index and to
